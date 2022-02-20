@@ -33,30 +33,27 @@ type ContextAction =
 const actions$ = new BehaviorSubject<ContextAction>({ type: 'context.INIT' });
 const initialState: Context = {};
 
-function reducer(state: Context, action: ContextAction): void {
+function reducer(state: Context, action: ContextAction): Context {
   switch (action.type) {
     case 'context.setContext':
-      state.userId = action.newContext.userId;
-      state.userName = action.newContext.userName;
-      break;
+      return {
+        userId: action.newContext.userId,
+        userName: action.newContext.userName,
+      };
     case 'context.setUserId':
-      state.userId = action.userId;
-      break;
+      return produce(state, (draft) => {
+        draft.userId = action.userId;
+      });
     case 'context.setUserName':
-      state.userName = action.userName;
-      break;
+      return produce(state, (draft) => {
+        draft.userName = action.userName;
+      });
+    default:
+      return state;
   }
 }
 
-const state$ = actions$.pipe(
-  scan(
-    (state: Context, action: ContextAction) =>
-      produce(state, (draft) => {
-        reducer(draft, action);
-      }),
-    initialState
-  )
-);
+const state$ = actions$.pipe(scan(reducer, initialState));
 
 export const contextStore = {
   get(): Observable<Context> {
